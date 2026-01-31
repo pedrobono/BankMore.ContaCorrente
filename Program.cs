@@ -9,6 +9,8 @@ using BankMore.ContaCorrente.Application.Commands;
 using Microsoft.OpenApi.Any;
 using BankMore.ContaCorrente.Api.Middleware;
 using BankMore.ContaCorrente.Api.Swagger;
+using BankMore.ContaCorrente.Domain.Interfaces;
+using BankMore.ContaCorrente.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,9 +46,9 @@ builder.Services.AddDbContext<DataBaseContext>(options => {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlite(connectionString);
 });
-
-// 2. AJUSTE O MEDIATR: Garanta que ele aponte para o Assembly onde estão os Handlers
-// Se os Handlers estiverem na mesma camada que o CriarContaCommand, use isso:
+builder.Services.AddScoped<IContaRepository, ContaRepository>();
+builder.Services.AddScoped<IMovimentoRepository, MovimentoRepository>();
+builder.Services.AddScoped<ITransferenciaRepository, TransferenciaRepository>();
 builder.Services.AddMediatR(cfg => {
     cfg.RegisterServicesFromAssembly(typeof(CriarContaCommand).Assembly);
 });
@@ -92,3 +94,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Torna a classe Program acessível para testes de integração
+public partial class Program { }
