@@ -1,0 +1,5 @@
+[Bb]in/
+[Obj]/
+*.AssemblyInfoInputs.cache
+*.GeneratedMSil.cache
+*.assets.json
