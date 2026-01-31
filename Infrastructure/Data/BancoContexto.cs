@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BankMore.ContaCorrente.Infrastructure.Data
 {
-    public class BancoContexto : DbContext
+    public class BancoContext : DbContext
     {
         public DbSet<Conta> Contas { get; set; }
 
-        public BancoContexto(DbContextOptions<BancoContexto> options) : base(options) { }
+        public BancoContext(DbContextOptions<BancoContext> options) : base(options) { }
     }
 }

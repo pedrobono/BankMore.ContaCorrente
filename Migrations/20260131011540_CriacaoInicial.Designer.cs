@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BankMore.ContaCorrente.Migrations
 {
-    [DbContext(typeof(BancoContexto))]
+    [DbContext(typeof(BancoContext))]
     [Migration("20260131011540_CriacaoInicial")]
     partial class CriacaoInicial
     {
