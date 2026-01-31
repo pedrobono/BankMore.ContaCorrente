@@ -13,27 +13,26 @@ A API **BankMore.ContaCorrente** é um serviço de gerenciamento bancário de al
 ## 🛠️ Instalação e Execução
 
 1. **Clonagem e Dependências**:
-   ```bash
+   bash
    git clone [https://github.com/pedrobono/BankMore.ContaCorrente.git](https://github.com/pedrobono/BankMore.ContaCorrente.git)
    cd BankMore.ContaCorrente
    dotnet restore
 
-```
 
 2. **Ambiente (Ubuntu/Linux)**:
-```bash
+bash
 export JWT_SECRET_KEY="SuaChaveSecretaDeProducaoAqui123!"
 export CONNECTIONSTRING="Data Source=BankMore.db"
 
-```
+
 
 
 3. **Banco de Dados e Execução**:
-```bash
+bash
 dotnet ef database update
 dotnet run
 
-```
+
 
 
 Acesse: `http://localhost:5188/swagger`
@@ -70,13 +69,13 @@ Todas as respostas de falha seguem o padrão definido para facilitar a integraç
 
 Exemplo de erro:
 
-```json
+json
 {
   "message": "Descrição amigável do erro",
   "failureType": "INVALID_DATA"
 }
 
-```
+
 
 ## 🤝 Contribuição
 
