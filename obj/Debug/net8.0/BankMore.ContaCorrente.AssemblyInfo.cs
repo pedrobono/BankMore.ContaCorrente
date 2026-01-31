@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BankMore.ContaCorrente")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5205d9968a50dca13909bc8a3edcca74f6180d65")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+de31eaa629373c8d3df59f213ac037fe7d786cbc")]
 [assembly: System.Reflection.AssemblyProductAttribute("BankMore.ContaCorrente")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BankMore.ContaCorrente")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
