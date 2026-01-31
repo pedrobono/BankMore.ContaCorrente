@@ -38,3 +38,5 @@ appsettings.Development.json
 ## --- SISTEMA OPERACIONAL (LINUX/MAC/WIN) ---
 .DS_Store
 Thumbs.db
+obj/Debug/net8.0/BankMore.ContaCorrente.AssemblyInfo.cs
+obj/Debug/net8.0/BankMore.ContaCorrente.AssemblyInfoInputs.cache
