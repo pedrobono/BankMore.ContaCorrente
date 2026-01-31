@@ -26,6 +26,12 @@ namespace BankMore.ContaCorrente.Migrations
                 {
                     table.PrimaryKey("PK_Contas", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Contas_NumeroConta",
+                table: "Contas",
+                column: "NumeroConta",
+                unique: true);
         }
 
         /// <inheritdoc />

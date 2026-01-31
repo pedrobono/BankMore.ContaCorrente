@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BankMore.ContaCorrente.Migrations
 {
-    [DbContext(typeof(BancoContext))]
-    partial class BancoContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(DataBaseContext))]
+    partial class DataBaseContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -43,6 +43,9 @@ namespace BankMore.ContaCorrente.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NumeroConta")
+                        .IsUnique();
 
                     b.ToTable("Contas");
                 });

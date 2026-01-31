@@ -33,7 +33,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddDbContext<BancoContext>(options =>
+builder.Services.AddDbContext<DataBaseContext>(options =>
     options.UseSqlite("Data Source=BankMore.db"));
 
 builder.Services.AddMediatR(cfg => {

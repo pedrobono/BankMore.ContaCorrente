@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BankMore.ContaCorrente.Migrations
 {
-    [DbContext(typeof(BancoContext))]
-    [Migration("20260131011540_CriacaoInicial")]
+    [DbContext(typeof(DataBaseContext))]
+    [Migration("20260131014507_CriacaoInicial")]
     partial class CriacaoInicial
     {
         /// <inheritdoc />
@@ -46,6 +46,9 @@ namespace BankMore.ContaCorrente.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("NumeroConta")
+                        .IsUnique();
 
                     b.ToTable("Contas");
                 });
