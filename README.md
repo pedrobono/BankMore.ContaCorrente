@@ -1,237 +1,100 @@
 # BankMore.ContaCorrente API
 
-A API **BankMore.ContaCorrente** é um serviço de gerenciamento de contas correntes que segue os padrões de **Domain-Driven Design (DDD)**, **CQRS** (Command Query Responsibility Segregation) e **MediatR**. Esta API oferece funcionalidades como criação de contas, autenticação, movimentações de contas e verificação de saldo, com autenticação JWT e validação de dados.
+A API **BankMore.ContaCorrente** é um serviço de gerenciamento bancário de alta performance desenvolvido em **.NET 8**. O projeto utiliza **Domain-Driven Design (DDD)** e o padrão **CQRS** com **MediatR** para garantir um processamento de transações escalável, seguro e resiliente.
 
-## Tecnologias Utilizadas
+## 🚀 Tecnologias e Padrões
+- **.NET 8** - Core da aplicação.
+- **CQRS & MediatR** - Separação clara entre comandos de escrita e consultas.
+- **JWT Authentication** - Segurança via tokens Bearer com suporte a esquemas de autorização.
+- **FluentValidation** - Garantia de integridade dos dados de entrada.
+- **SQLite** - Persistência relacional com suporte a Migrations.
+- **Swagger/OpenAPI 3.0** - Documentação técnica automatizada e padronizada.
 
-- **.NET 8** - Framework principal.
-- **MediatR** - Padrão CQRS para separação de comandos e consultas.
-- **Swagger** - Documentação interativa da API.
-- **JWT Authentication** - Autenticação baseada em tokens JWT.
-- **FluentValidation** - Para validação de dados.
-- **BCrypt.Net** - Para hash de senhas.
-- **SQLite** - Banco de dados relacional (configurável via variável de ambiente).
+## 🛠️ Instalação e Execução
 
-## Configuração e Instalação
-
-### Passos para rodar localmente:
-
-1. **Clone o repositório**:
-
+1. **Clonagem e Dependências**:
    ```bash
-   git clone https://github.com/pedrobono/BankMore.ContaCorrente.git
+   git clone [https://github.com/pedrobono/BankMore.ContaCorrente.git](https://github.com/pedrobono/BankMore.ContaCorrente.git)
    cd BankMore.ContaCorrente
-   ```
-
-2. **Instale as dependências**:
-
-   Para restaurar as dependências do projeto:
-
-   ```bash
    dotnet restore
-   ```
 
-3. **Configure as variáveis de ambiente**:
+```
 
-   Defina as variáveis de ambiente para o **JWT_SECRET_KEY** e a string de conexão com o banco de dados.
+2. **Ambiente (Ubuntu/Linux)**:
+```bash
+export JWT_SECRET_KEY="SuaChaveSecretaDeProducaoAqui123!"
+export CONNECTIONSTRING="Data Source=BankMore.db"
 
-   **Exemplo (Linux/Mac)**:
+```
 
-   ```bash
-   export JWT_SECRET_KEY="SuaChaveSecretaDeProducaoAqui123!"
-   export CONNECTIONSTRING="Data Source=BankMore_Production.db"
-   ```
 
-   **Exemplo (Windows, PowerShell)**:
+3. **Banco de Dados e Execução**:
+```bash
+dotnet ef database update
+dotnet run
 
-   ```powershell
-   $env:JWT_SECRET_KEY="SuaChaveSecretaDeProducaoAqui123!"
-   $env:CONNECTIONSTRING="Data Source=BankMore_Production.db"
-   ```
+```
 
-4. **Execute o projeto**:
 
-   Para rodar a aplicação localmente, execute:
+Acesse: `http://localhost:5188/swagger`
 
-   ```bash
-   dotnet run
-   ```
+## 📍 Endpoints da API
 
-   O servidor estará disponível em `https://localhost:5188`.
+### 🔐 Autenticação (`/api/Auth/login`)
 
-### Configurações de Banco de Dados
+* **POST**: Autentica via CPF ou Conta. Retorna um `LoginResponse` contendo o Token JWT.
 
-Por padrão, a aplicação usa **SQLite**. A string de conexão é configurada no arquivo `appsettings.json`, mas pode ser substituída por variáveis de ambiente para produção.
+### 🏦 Gerenciamento de Conta (`/api/Conta`)
 
-### Acessando a API
+* **POST**: Criação de conta corrente.
+* **Exemplo de Retorno**: `{ "numeroConta": "85381-6" }`
 
-Acesse a documentação interativa da API via **Swagger**:
 
-- URL: `https://localhost:5188/swagger`
 
-## Endpoints da API
+### 💸 Movimentações (`/api/Movimento`)
 
-### 1. **Criar Conta**
-   **Endpoint:** `POST /contas`
+* **POST**: Registra Crédito (`C`) ou Débito (`D`).
+* **Idempotência**: Exige um `requestId` (UUID) para evitar duplicidade de transações.
+* **Segurança**: Requer cabeçalho `Authorization: Bearer <token>`.
 
-   Cria uma nova conta com os dados fornecidos.
+### 💰 Consultas (`/api/Saldo`)
 
-   **Corpo da requisição:**
+* **GET**: Retorna o `SaldoDto` contendo o número da conta, nome do titular e saldo atualizado.
 
-   ```json
-   {
-     "cpf": "10010374990",
-     "senha": "senha123",
-     "nomeTitular": "Pedro Henrique Bono"
-   }
-   ```
+## 🛡️ Tratamento de Erros Padronizado
 
-   **Resposta:**
+Todas as respostas de falha seguem o padrão definido para facilitar a integração com front-ends:
 
-   ```json
-   {
-     "numeroConta": "53775-2"
-   }
-   ```
+* **400 (Bad Request)**: Erros de validação ou regras de negócio (ex: Saldo Insuficiente).
+* **401 (Unauthorized)**: Token ausente, expirado ou credenciais inválidas.
 
-   **Erros:**
+Exemplo de erro:
 
-   - **400 - CPF Duplicado:**
+```json
+{
+  "message": "Descrição amigável do erro",
+  "failureType": "INVALID_DATA"
+}
 
-     ```json
-     {
-       "message": "O CPF informado já está cadastrado.",
-       "failureType": "INVALID_DOCUMENT"
-     }
-     ```
+```
 
-### 2. **Login (Autenticação)**
-   **Endpoint:** `POST /auth/login`
+## 🤝 Contribuição
 
-   Realiza o login e retorna um token JWT.
+1. Fork o projeto.
+2. Crie sua Feature Branch (`git checkout -b feature/NovaFeature`).
+3. Commit suas mudanças (`git commit -m 'feat: Descrição da feature'`).
+4. Push para a Branch (`git push origin feature/NovaFeature`).
+5. Abra um Pull Request.
 
-   **Corpo da requisição:**
+## ⚖️ Licença
 
-   ```json
-   {
-     "cpfOrAccountNumber": "10010374990",
-     "senha": "senha123"
-   }
-   ```
-
-   **Resposta:**
-
-   ```json
-   {
-     "token": "JWT_Token_Gerado_Aqui"
-   }
-   ```
-
-### 3. **Inativar Conta**
-   **Endpoint:** `PATCH /accounts/me/inactivate`
-
-   Inativa a conta do usuário autenticado.
-
-   **Corpo da requisição:**
-
-   ```json
-   {
-     "senha": "senha123"
-   }
-   ```
-
-   **Resposta:**
-   - **204 - Sem conteúdo** (caso a conta seja inativada com sucesso).
-
-### 4. **Registrar Movimentos**
-   **Endpoint:** `POST /movements`
-
-   Registra um movimento de crédito (C) ou débito (D) na conta do usuário.
-
-   **Corpo da requisição:**
-
-   ```json
-   {
-     "requestId": "unique-request-id",
-     "accountNumber": "53775-2",
-     "value": 100.0,
-     "type": "C"
-   }
-   ```
-
-   **Resposta:**
-   - **204 - Sem conteúdo** (caso o movimento seja registrado com sucesso).
-
-### 5. **Verificar Saldo**
-   **Endpoint:** `GET /balance`
-
-   Recupera o saldo da conta do usuário autenticado.
-
-   **Resposta:**
-
-   ```json
-   {
-     "accountNumber": "53775-2",
-     "holderName": "Pedro Henrique Bono",
-     "timestamp": "2026-01-31T02:00:00Z",
-     "balance": 100.0
-   }
-   ```
-
-## Tratamento de Erros
-
-A API retorna erros no formato JSON:
-
-- **Erro de Validação** (por exemplo, CPF duplicado):
-
-  ```json
-  {
-    "message": "O CPF informado já está cadastrado.",
-    "failureType": "INVALID_DOCUMENT"
-  }
-  ```
-
-- **Erro Inesperado**:
-
-  ```json
-  {
-    "message": "Ocorreu um erro inesperado.",
-    "failureType": "UNKNOWN_ERROR"
-  }
-  ```
-
-## Testes
-
-### Testes Unitários
-
-- Testes para **Handlers** de comandos e consultas (ex.: criação de conta, validação de CPF).
-- Testes para garantir que a lógica de movimentações de contas e cálculos de saldo funcione corretamente.
-
-### Testes de Integração
-
-- **Autenticação**: Testar a geração do token JWT.
-- **Movimentos de Conta**: Garantir que a API registre corretamente os movimentos, incluindo validação de idempotência.
-- **Saldo**: Testar a consulta de saldo para verificar a soma de créditos e débitos.
-
-## Licença
-
-Este projeto está licenciado sob a licença MIT.
-
-## Como Contribuir
-
-1. Faça o fork do projeto.
-2. Crie uma branch para a sua funcionalidade (`git checkout -b feature/minha-feature`).
-3. Faça suas alterações e commit (`git commit -am 'Adiciona nova funcionalidade'`).
-4. Envie para o seu fork (`git push origin feature/minha-feature`).
-5. Abra um pull request.
+Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](https://www.google.com/search?q=LICENSE) para detalhes.
 
 ---
 
-## Sobre o Autor
+## 👨‍💻 Autor
 
-Este projeto foi desenvolvido por **Pedro Bono**.
+**Pedro Bono**
 
-- GitHub: [https://github.com/pedrobono](https://github.com/pedrobono)
-- LinkedIn: [https://www.linkedin.com/in/pedro-h-bono/](https://www.linkedin.com/in/pedro-h-bono/)
-
-Se você tiver dúvidas, sugestões ou quiser colaborar no projeto, fique à vontade para abrir um **issue** ou enviar um **pull request**.
+* [GitHub](https://github.com/pedrobono)
+* [LinkedIn](https://www.linkedin.com/in/pedro-h-bono/)
