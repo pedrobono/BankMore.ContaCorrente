@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BankMore.ContaCorrente.Migrations
 {
     [DbContext(typeof(DataBaseContext))]
-    [Migration("20260131014507_CriacaoInicial")]
+    [Migration("20260131024403_CriacaoInicial")]
     partial class CriacaoInicial
     {
         /// <inheritdoc />
