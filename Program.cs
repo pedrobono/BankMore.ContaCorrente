@@ -12,66 +12,57 @@ using BankMore.ContaCorrente.Api.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuração do Swagger
+// 1. ADICIONE ESTA LINHA: Registra os serviços necessários para Controllers
+builder.Services.AddControllers();
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
+builder.Services.AddSwaggerGen(c => {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "BankMore.ContaCorrente", Version = "v1" });
-    
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
         Description = "JWT Authorization header usando o esquema Bearer. Exemplo: 'Bearer 12345abcdef'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
-    
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
         {
-            new OpenApiSecurityScheme
-            {
+            new OpenApiSecurityScheme {
                 Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
     });
 
-    // Adicionando os filtros de exemplo personalizados
-    c.OperationFilter<SwaggerRequestExampleFilter>();  // Aplicando o filtro de exemplo
-    c.OperationFilter<SwaggerResponseOperationFilter>(); // Filtro para as respostas de erro
+    c.OperationFilter<SwaggerRequestExampleFilter>();
+    c.OperationFilter<SwaggerResponseOperationFilter>();
 });
 
-// Configuração do DbContext
-builder.Services.AddDbContext<DataBaseContext>(options =>
-{
+builder.Services.AddDbContext<DataBaseContext>(options => {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlite(connectionString);
 });
 
-// Adicionar MediatR
+// 2. AJUSTE O MEDIATR: Garanta que ele aponte para o Assembly onde estão os Handlers
+// Se os Handlers estiverem na mesma camada que o CriarContaCommand, use isso:
 builder.Services.AddMediatR(cfg => {
-    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly);
+    cfg.RegisterServicesFromAssembly(typeof(CriarContaCommand).Assembly);
 });
 
-// Configuração do JWT
 var jwtSecretKey = builder.Configuration["JwtSettings:SecretKey"] ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
 
-if (string.IsNullOrEmpty(jwtSecretKey))
-{
+if (string.IsNullOrEmpty(jwtSecretKey)) {
     throw new InvalidOperationException("A chave secreta do JWT não foi fornecida.");
 }
 
-builder.Services.AddAuthentication(options =>
-{
+builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
+.AddJwtBearer(options => {
+    options.TokenValidationParameters = new TokenValidationParameters {
         ValidateIssuer = false,
         ValidateAudience = false,
         ValidateLifetime = true,
@@ -81,32 +72,23 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+//builder.Services.AddSingleton<ErrorHandlingMiddleware>(); 
 
 var app = builder.Build();
 
-// Usar o middleware de tratamento de erros globalmente
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
+if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Habilitar HTTPS e autenticação/autorizaçào
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Endpoint de criação de conta (sem autenticação)
-app.MapPost("/contas", async (CriarContaCommand comando, IMediator mediator) =>
-{
-    var resultado = await mediator.Send(comando);
-    return Results.Created($"/contas/{resultado}", resultado);
-})
-.WithName("CriarConta")
-.WithOpenApi() // Adicionando o OpenApi para o Swagger gerar a documentação correta
-    .Produces<string>(201) // Configurando o retorno com o código 201 e o tipo string
-    .Produces<string>(400); // Configurando o retorno para erros de validação, como CPF duplicado
+// Mapeia os controllers para as rotas definidas nos atributos [Route]
+app.MapControllers();
 
 app.Run();

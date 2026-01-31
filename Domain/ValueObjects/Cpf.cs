@@ -1,22 +1,19 @@
 using System;
 using System.Linq;
+using BankMore.ContaCorrente.Domain.Exceptions;
 
-namespace BankMore.ContaCorrente.Domain.ValueObjects
-{
-    public class Cpf
-    {
+namespace BankMore.ContaCorrente.Domain.ValueObjects {
+    public class Cpf {
         public string Valor { get; private set; }
 
-        public Cpf(string valor)
-        {
+        public Cpf(string valor) {
             if (!EhValido(valor))
-                throw new ArgumentException("CPF inválido.");
+                throw new BusinessException("CPF inválido.", "INVALID_DOCUMENT");
 
             Valor = valor;
         }
 
-        private bool EhValido(string cpf)
-        {
+        private bool EhValido(string cpf) {
             if (string.IsNullOrWhiteSpace(cpf))
                 return false;
 

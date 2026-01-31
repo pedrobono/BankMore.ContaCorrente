@@ -5,26 +5,19 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using BankMore.ContaCorrente.Domain.Exceptions;
 
-namespace BankMore.ContaCorrente.Application.Handlers
-{
-    public class CriarContaHandler : IRequestHandler<CriarContaCommand, string>
-    {
+namespace BankMore.ContaCorrente.Application.Handlers {
+    public class CriarContaHandler : IRequestHandler<CriarContaCommand, string> {
         private readonly DataBaseContext _contexto;
 
-        public CriarContaHandler(DataBaseContext contexto)
-        {
+        public CriarContaHandler(DataBaseContext contexto) {
             _contexto = contexto;
         }
 
-        public async Task<string> Handle(CriarContaCommand request, CancellationToken cancellationToken)
-        {
-            // Verificar se o CPF já existe
+        public async Task<string> Handle(CriarContaCommand request, CancellationToken cancellationToken) {
             var cpfExistente = await _contexto.Contas
                 .AnyAsync(c => c.Cpf == request.Cpf, cancellationToken);
 
-            if (cpfExistente)
-            {
-                // Lançar BusinessException se CPF já existir
+            if (cpfExistente) {
                 throw new BusinessException("O CPF informado já está cadastrado.", "DUPLICATE_CPF");
             }
 
@@ -33,14 +26,12 @@ namespace BankMore.ContaCorrente.Application.Handlers
             string numeroGerado;
             bool numeroJaExiste;
 
-            do
-            {
+            do {
                 numeroGerado = GerarNumeroUnico();
                 numeroJaExiste = await _contexto.Contas.AnyAsync(c => c.NumeroConta == numeroGerado, cancellationToken);
             } while (numeroJaExiste);
 
-            var conta = new Conta
-            {
+            var conta = new Conta {
                 Id = Guid.NewGuid(),
                 NumeroConta = numeroGerado,
                 NomeTitular = request.NomeTitular,
@@ -55,8 +46,7 @@ namespace BankMore.ContaCorrente.Application.Handlers
             return conta.NumeroConta;
         }
 
-        private string GerarNumeroUnico()
-        {
+        private string GerarNumeroUnico() {
             var random = new Random();
             return $"{random.Next(10000, 99999)}-{random.Next(0, 9)}";
         }

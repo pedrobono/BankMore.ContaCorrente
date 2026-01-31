@@ -1,9 +1,8 @@
-using System.ComponentModel.DataAnnotations; // Não esqueça deste using!
+using System.ComponentModel.DataAnnotations;
 
 namespace BankMore.ContaCorrente.Domain.Entities;
 
-public class Conta
-{
+public class Conta {
     public Guid Id { get; set; }
     public string NumeroConta { get; set; }
     public string NomeTitular { get; set; }

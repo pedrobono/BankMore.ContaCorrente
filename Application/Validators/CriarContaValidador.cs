@@ -1,12 +1,9 @@
 using BankMore.ContaCorrente.Application.Commands;
 using FluentValidation;
 
-namespace BankMore.ContaCorrente.Application.Validators
-{
-    public class CriarContaValidador : AbstractValidator<CriarContaCommand>
-    {
-        public CriarContaValidador()
-        {
+namespace BankMore.ContaCorrente.Application.Validators {
+    public class CriarContaValidador : AbstractValidator<CriarContaCommand> {
+        public CriarContaValidador() {
             RuleFor(x => x.Cpf)
                 .NotEmpty().WithMessage("CPF é obrigatório")
                 .Length(11).WithMessage("CPF deve ter 11 caracteres")

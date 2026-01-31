@@ -1,27 +1,27 @@
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Any;
+using BankMore.ContaCorrente.Application.Commands;
 
-namespace BankMore.ContaCorrente.Api.Swagger
-{
-    public class SwaggerRequestExampleFilter : IOperationFilter
-    {
-        public void Apply(OpenApiOperation operation, OperationFilterContext context)
-        {
-            // Verifica se o corpo da requisição é JSON
-            if (operation.RequestBody != null && operation.RequestBody.Content.ContainsKey("application/json"))
-            {
-                var schema = operation.RequestBody.Content["application/json"].Schema;
+namespace BankMore.ContaCorrente.Api.Swagger;
 
-                // Verifica se o método sendo processado é o "CriarConta"
-                if (context.MethodInfo.Name == "CriarConta")
-                {
-                    // Definindo exemplos para os campos cpf, senha e nomeTitular
-                    schema.Properties["cpf"].Example = new OpenApiString("10010374990");
-                    schema.Properties["senha"].Example = new OpenApiString("senha123");
-                    schema.Properties["nomeTitular"].Example = new OpenApiString("Pedro Henrique Bono");
-                }
-            }
+public class SwaggerRequestExampleFilter : IOperationFilter {
+    public void Apply(OpenApiOperation operation, OperationFilterContext context) {
+        if (context.MethodInfo.Name == "CriarConta") {
+            operation.RequestBody.Content["application/json"].Example = new OpenApiObject {
+                ["cpf"] = new OpenApiString("10010374990"),
+                ["senha"] = new OpenApiString("senha123"),
+                ["nomeTitular"] = new OpenApiString("Pedro Henrique Bono")
+            };
+        }
+
+        if (context.MethodInfo.Name == "RegistrarMovimento") {
+            operation.RequestBody.Content["application/json"].Example = new OpenApiObject {
+                ["accountNumber"] = new OpenApiString("12345-6"),
+                ["value"] = new OpenApiDouble(150.50),
+                ["type"] = new OpenApiString("C"), // C para Crédito, D para Débito
+                ["requestId"] = new OpenApiString(Guid.NewGuid().ToString())
+            };
         }
     }
 }
