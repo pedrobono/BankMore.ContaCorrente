@@ -33,14 +33,14 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             var senha = "senha123";
             var senhaHash = BCrypt.Net.BCrypt.HashPassword(senha);
 
-            _context.Contas.Add(new Conta
+            _context.ContaCorrente.Add(new Conta
             {
-                Id = contaId,
-                Cpf = "12345678901",
-                NumeroConta = "12345-6",
-                NomeTitular = "Test User",
+                IdContaCorrente = contaId,
+                Salt = "12345678901",
+                Numero = 12345,
+                Nome = "Test User",
                 Senha = senhaHash,
-                Ativa = true
+                Ativo = 1
             });
             await _context.SaveChangesAsync();
 
@@ -54,8 +54,8 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             await _handler.Handle(command, CancellationToken.None);
 
             // Assert
-            var conta = await _context.Contas.FindAsync(contaId);
-            Assert.False(conta.Ativa);
+            var conta = await _context.ContaCorrente.FindAsync(contaId);
+            Assert.Equal(0, conta.Ativo);
         }
 
         [Fact]
@@ -65,14 +65,14 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             var contaId = Guid.NewGuid();
             var senhaHash = BCrypt.Net.BCrypt.HashPassword("senha123");
 
-            _context.Contas.Add(new Conta
+            _context.ContaCorrente.Add(new Conta
             {
-                Id = contaId,
-                Cpf = "12345678901",
-                NumeroConta = "12345-6",
-                NomeTitular = "Test User",
+                IdContaCorrente = contaId,
+                Salt = "12345678901",
+                Numero = 12345,
+                Nome = "Test User",
                 Senha = senhaHash,
-                Ativa = true
+                Ativo = 1
             });
             await _context.SaveChangesAsync();
 

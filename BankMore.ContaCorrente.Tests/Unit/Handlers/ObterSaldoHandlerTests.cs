@@ -30,14 +30,14 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
         {
             // Arrange
             var contaId = Guid.NewGuid();
-            _context.Contas.Add(new Conta
+            _context.ContaCorrente.Add(new Conta
             {
-                Id = contaId,
-                Cpf = "12345678901",
-                NumeroConta = "12345-6",
-                NomeTitular = "Test User",
+                IdContaCorrente = contaId,
+                Salt = "12345678901",
+                Numero = 12345,
+                Nome = "Test User",
                 Senha = "hash",
-                Ativa = true
+                Ativo = 1
             });
             await _context.SaveChangesAsync();
 
@@ -48,7 +48,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("12345-6", result.NumeroConta);
+            Assert.Equal("12345-4", result.NumeroConta);
             Assert.Equal("Test User", result.NomeTitular);
             Assert.True(result.DataHoraConsulta <= DateTime.UtcNow);
             Assert.Equal(0, result.Saldo);
@@ -71,14 +71,14 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
         {
             // Arrange
             var contaId = Guid.NewGuid();
-            _context.Contas.Add(new Conta
+            _context.ContaCorrente.Add(new Conta
             {
-                Id = contaId,
-                Cpf = "12345678901",
-                NumeroConta = "12345-6",
-                NomeTitular = "Test User",
+                IdContaCorrente = contaId,
+                Salt = "12345678901",
+                Numero = 12345,
+                Nome = "Test User",
                 Senha = "hash",
-                Ativa = false
+                Ativo = 0
             });
             await _context.SaveChangesAsync();
 
@@ -95,20 +95,20 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
         {
             // Arrange
             var contaId = Guid.NewGuid();
-            _context.Contas.Add(new Conta
+            _context.ContaCorrente.Add(new Conta
             {
-                Id = contaId,
-                Cpf = "12345678901",
-                NumeroConta = "12345-6",
-                NomeTitular = "Test User",
+                IdContaCorrente = contaId,
+                Salt = "12345678901",
+                Numero = 12345,
+                Nome = "Test User",
                 Senha = "hash",
-                Ativa = true
+                Ativo = 1
             });
 
-            _context.Movimentos.AddRange(
-                new Movimento { Id = Guid.NewGuid(), ContaId = contaId, Tipo = "C", Valor = 100m, DataHora = DateTime.UtcNow, RequestId = Guid.NewGuid().ToString() },
-                new Movimento { Id = Guid.NewGuid(), ContaId = contaId, Tipo = "C", Valor = 50m, DataHora = DateTime.UtcNow, RequestId = Guid.NewGuid().ToString() },
-                new Movimento { Id = Guid.NewGuid(), ContaId = contaId, Tipo = "D", Valor = 30m, DataHora = DateTime.UtcNow, RequestId = Guid.NewGuid().ToString() }
+            _context.Movimento.AddRange(
+                new Movimento { IdMovimento = Guid.NewGuid(), IdContaCorrente = contaId, TipoMovimento = "C", Valor = 100m, DataMovimento = DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss") },
+                new Movimento { IdMovimento = Guid.NewGuid(), IdContaCorrente = contaId, TipoMovimento = "C", Valor = 50m, DataMovimento = DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss") },
+                new Movimento { IdMovimento = Guid.NewGuid(), IdContaCorrente = contaId, TipoMovimento = "D", Valor = 30m, DataMovimento = DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss") }
             );
             await _context.SaveChangesAsync();
 

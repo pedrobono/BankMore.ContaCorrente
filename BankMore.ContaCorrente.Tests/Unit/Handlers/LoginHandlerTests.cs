@@ -38,14 +38,14 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             var cpfOriginal = "12345678901";
             var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
             
-            _context.Contas.Add(new Conta
+            _context.ContaCorrente.Add(new Conta
             {
-                Id = Guid.NewGuid(),
-                Cpf = cpfHash,
-                NumeroConta = "12345-6",
-                NomeTitular = "Test User",
+                IdContaCorrente = Guid.NewGuid(),
+                Salt = cpfHash,
+                Numero = 12345,
+                Nome = "Test User",
                 Senha = BCrypt.Net.BCrypt.HashPassword("password123"),
-                Ativa = true
+                Ativo = 1
             });
             await _context.SaveChangesAsync();
 
@@ -67,14 +67,14 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
             var numeroConta = "54321-9";
             
-            _context.Contas.Add(new Conta
+            _context.ContaCorrente.Add(new Conta
             {
-                Id = Guid.NewGuid(),
-                Cpf = cpfHash,
-                NumeroConta = numeroConta,
-                NomeTitular = "Test User 2",
+                IdContaCorrente = Guid.NewGuid(),
+                Salt = cpfHash,
+                Numero = 54321,
+                Nome = "Test User 2",
                 Senha = BCrypt.Net.BCrypt.HashPassword("password123"),
-                Ativa = true
+                Ativo = 1
             });
             await _context.SaveChangesAsync();
 
@@ -95,14 +95,14 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             var cpfOriginal = "12345678901";
             var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
             
-            _context.Contas.Add(new Conta
+            _context.ContaCorrente.Add(new Conta
             {
-                Id = Guid.NewGuid(),
-                Cpf = cpfHash,
-                NumeroConta = "12345-6",
-                NomeTitular = "Test User",
+                IdContaCorrente = Guid.NewGuid(),
+                Salt = cpfHash,
+                Numero = 12345,
+                Nome = "Test User",
                 Senha = BCrypt.Net.BCrypt.HashPassword("password123"),
-                Ativa = true
+                Ativo = 1
             });
             await _context.SaveChangesAsync();
 
