@@ -5,6 +5,7 @@ namespace BankMore.ContaCorrente.Application.Commands {
         public string RequestId { get; set; }
         public string NumeroConta { get; set; }
         public decimal Valor { get; set; }
-        public string Tipo { get; set; }  // "C" para crédito, "D" para débito
+        public string Tipo { get; set; }
+        public Guid? ContaIdLogada { get; set; }
     }
 }

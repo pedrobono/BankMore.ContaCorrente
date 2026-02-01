@@ -19,11 +19,12 @@ namespace BankMore.ContaCorrente.Api.Controllers {
         [HttpGet]
         [Authorize]
         [ProducesResponseType(typeof(SaldoDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> ObterSaldo() {
             var contaId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(contaId)) {
-                return Unauthorized(new { message = "Token inválido ou expirado", failureType = "USER_UNAUTHORIZED" });
+                return StatusCode(403, new { message = "Token inválido ou expirado", failureType = "INVALID_TOKEN" });
             }
 
             var saldo = await _mediator.Send(new ObterSaldoQuery { ContaId = Guid.Parse(contaId) });

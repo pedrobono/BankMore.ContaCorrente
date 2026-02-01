@@ -136,5 +136,135 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             await Assert.ThrowsAsync<BusinessException>(() =>
                 _handler.Handle(command, CancellationToken.None));
         }
+
+        [Fact]
+        public async Task Handle_ShouldAllowCredit_ToAnyAccount()
+        {
+            // Arrange
+            var contaLogadaId = Guid.NewGuid();
+            var contaDestinoId = Guid.NewGuid();
+
+            _context.Contas.AddRange(
+                new Conta { Id = contaLogadaId, Cpf = "11111111111", NumeroConta = "11111-1", NomeTitular = "User 1", Senha = "hash", Ativa = true },
+                new Conta { Id = contaDestinoId, Cpf = "22222222222", NumeroConta = "22222-2", NomeTitular = "User 2", Senha = "hash", Ativa = true }
+            );
+            await _context.SaveChangesAsync();
+
+            var command = new RegistrarMovimentoCommand
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                NumeroConta = "22222-2",
+                Valor = 100m,
+                Tipo = "C",
+                ContaIdLogada = contaLogadaId
+            };
+
+            // Act
+            await _handler.Handle(command, CancellationToken.None);
+
+            // Assert
+            var movimento = await _context.Movimentos.FirstOrDefaultAsync(m => m.RequestId == command.RequestId);
+            Assert.NotNull(movimento);
+            Assert.Equal(contaDestinoId, movimento.ContaId);
+        }
+
+        [Fact]
+        public async Task Handle_ShouldAllowDebit_OnOwnAccount()
+        {
+            // Arrange
+            var contaId = Guid.NewGuid();
+
+            _context.Contas.Add(
+                new Conta { Id = contaId, Cpf = "11111111111", NumeroConta = "11111-1", NomeTitular = "User 1", Senha = "hash", Ativa = true }
+            );
+            await _context.SaveChangesAsync();
+
+            // Primeiro adicionar crédito para ter saldo
+            var creditoCommand = new RegistrarMovimentoCommand
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                NumeroConta = "11111-1",
+                Valor = 200m,
+                Tipo = "C",
+                ContaIdLogada = contaId
+            };
+            await _handler.Handle(creditoCommand, CancellationToken.None);
+
+            var command = new RegistrarMovimentoCommand
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                NumeroConta = "11111-1",
+                Valor = 100m,
+                Tipo = "D",
+                ContaIdLogada = contaId
+            };
+
+            // Act
+            await _handler.Handle(command, CancellationToken.None);
+
+            // Assert
+            var movimento = await _context.Movimentos.FirstOrDefaultAsync(m => m.RequestId == command.RequestId);
+            Assert.NotNull(movimento);
+            Assert.Equal(contaId, movimento.ContaId);
+            Assert.Equal("D", movimento.Tipo);
+        }
+
+        [Fact]
+        public async Task Handle_ShouldThrowInvalidValue_WhenNegativeValue()
+        {
+            // Arrange
+            _context.Contas.Add(new Conta
+            {
+                Id = Guid.NewGuid(),
+                Cpf = "12345678901",
+                NumeroConta = "12345-6",
+                NomeTitular = "Test User",
+                Senha = "hash",
+                Ativa = true
+            });
+            await _context.SaveChangesAsync();
+
+            var command = new RegistrarMovimentoCommand
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                NumeroConta = "12345-6",
+                Valor = -100m,
+                Tipo = "C"
+            };
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<BusinessException>(() =>
+                _handler.Handle(command, CancellationToken.None));
+            Assert.Equal("INVALID_VALUE", exception.FailureType);
+        }
+
+        [Fact]
+        public async Task Handle_ShouldThrowInvalidType_WhenInvalidTipo()
+        {
+            // Arrange
+            _context.Contas.Add(new Conta
+            {
+                Id = Guid.NewGuid(),
+                Cpf = "12345678901",
+                NumeroConta = "12345-6",
+                NomeTitular = "Test User",
+                Senha = "hash",
+                Ativa = true
+            });
+            await _context.SaveChangesAsync();
+
+            var command = new RegistrarMovimentoCommand
+            {
+                RequestId = Guid.NewGuid().ToString(),
+                NumeroConta = "12345-6",
+                Valor = 100m,
+                Tipo = "X"
+            };
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<BusinessException>(() =>
+                _handler.Handle(command, CancellationToken.None));
+            Assert.Equal("INVALID_TYPE", exception.FailureType);
+        }
     }
 }

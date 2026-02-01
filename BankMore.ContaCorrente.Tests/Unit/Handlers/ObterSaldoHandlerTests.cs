@@ -1,7 +1,7 @@
-using Xunit;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Xunit;
 using BankMore.ContaCorrente.Application.Handlers;
 using BankMore.ContaCorrente.Application.Queries;
 using BankMore.ContaCorrente.Infrastructure.Data;
@@ -9,7 +9,7 @@ using BankMore.ContaCorrente.Domain.Entities;
 using BankMore.ContaCorrente.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
-namespace BankMore.ContaCorrente.Tests.UnitTests
+namespace BankMore.ContaCorrente.Tests.Unit.Handlers
 {
     public class ObterSaldoHandlerTests
     {
@@ -26,7 +26,7 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
         }
 
         [Fact]
-        public async Task Handle_ValidAccountId_ReturnsCorrectBalance()
+        public async Task Handle_ShouldReturnSaldo_WithDataHoraConsulta()
         {
             // Arrange
             var contaId = Guid.NewGuid();
@@ -39,8 +39,6 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
                 Senha = "hash",
                 Ativa = true
             });
-            _context.Movimentos.Add(new Movimento { Id = Guid.NewGuid(), ContaId = contaId, Tipo = "C", Valor = 100m, DataHora = DateTime.Now, RequestId = Guid.NewGuid().ToString() });
-            _context.Movimentos.Add(new Movimento { Id = Guid.NewGuid(), ContaId = contaId, Tipo = "D", Valor = 30m, DataHora = DateTime.Now, RequestId = Guid.NewGuid().ToString() });
             await _context.SaveChangesAsync();
 
             var query = new ObterSaldoQuery { ContaId = contaId };
@@ -49,20 +47,78 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             var result = await _handler.Handle(query, CancellationToken.None);
 
             // Assert
-            Assert.Equal(70m, result.Saldo);
+            Assert.NotNull(result);
             Assert.Equal("12345-6", result.NumeroConta);
             Assert.Equal("Test User", result.NomeTitular);
+            Assert.True(result.DataHoraConsulta <= DateTime.UtcNow);
+            Assert.Equal(0, result.Saldo);
         }
 
         [Fact]
-        public async Task Handle_InvalidAccountId_ThrowsException()
+        public async Task Handle_ShouldThrowInvalidAccount_WhenAccountNotFound()
         {
             // Arrange
             var query = new ObterSaldoQuery { ContaId = Guid.NewGuid() };
 
             // Act & Assert
-            await Assert.ThrowsAsync<BusinessException>(() =>
+            var exception = await Assert.ThrowsAsync<BusinessException>(() =>
                 _handler.Handle(query, CancellationToken.None));
+            Assert.Equal("INVALID_ACCOUNT", exception.FailureType);
+        }
+
+        [Fact]
+        public async Task Handle_ShouldThrowInactiveAccount_WhenAccountIsInactive()
+        {
+            // Arrange
+            var contaId = Guid.NewGuid();
+            _context.Contas.Add(new Conta
+            {
+                Id = contaId,
+                Cpf = "12345678901",
+                NumeroConta = "12345-6",
+                NomeTitular = "Test User",
+                Senha = "hash",
+                Ativa = false
+            });
+            await _context.SaveChangesAsync();
+
+            var query = new ObterSaldoQuery { ContaId = contaId };
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<BusinessException>(() =>
+                _handler.Handle(query, CancellationToken.None));
+            Assert.Equal("INACTIVE_ACCOUNT", exception.FailureType);
+        }
+
+        [Fact]
+        public async Task Handle_ShouldCalculateSaldo_WithCreditsAndDebits()
+        {
+            // Arrange
+            var contaId = Guid.NewGuid();
+            _context.Contas.Add(new Conta
+            {
+                Id = contaId,
+                Cpf = "12345678901",
+                NumeroConta = "12345-6",
+                NomeTitular = "Test User",
+                Senha = "hash",
+                Ativa = true
+            });
+
+            _context.Movimentos.AddRange(
+                new Movimento { Id = Guid.NewGuid(), ContaId = contaId, Tipo = "C", Valor = 100m, DataHora = DateTime.UtcNow, RequestId = Guid.NewGuid().ToString() },
+                new Movimento { Id = Guid.NewGuid(), ContaId = contaId, Tipo = "C", Valor = 50m, DataHora = DateTime.UtcNow, RequestId = Guid.NewGuid().ToString() },
+                new Movimento { Id = Guid.NewGuid(), ContaId = contaId, Tipo = "D", Valor = 30m, DataHora = DateTime.UtcNow, RequestId = Guid.NewGuid().ToString() }
+            );
+            await _context.SaveChangesAsync();
+
+            var query = new ObterSaldoQuery { ContaId = contaId };
+
+            // Act
+            var result = await _handler.Handle(query, CancellationToken.None);
+
+            // Assert
+            Assert.Equal(120m, result.Saldo); // 100 + 50 - 30
         }
     }
 }

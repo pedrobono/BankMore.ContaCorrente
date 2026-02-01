@@ -49,21 +49,68 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
         }
 
         [Fact]
+        public async Task Handle_CpfDeveSerHasheado()
+        {
+            // Arrange
+            var cpfOriginal = "52998224725";
+            var command = new CriarContaCommand 
+            { 
+                Cpf = cpfOriginal, 
+                NomeTitular = "Test Hash", 
+                Senha = "senha123" 
+            };
+
+            // Act
+            var numeroConta = await _handler.Handle(command, CancellationToken.None);
+            var contaSalva = await _context.Contas.FirstOrDefaultAsync(c => c.NumeroConta == numeroConta);
+
+            // Assert
+            Assert.NotNull(contaSalva);
+            Assert.NotEqual(cpfOriginal, contaSalva.Cpf); // CPF não deve estar em texto plano
+            Assert.True(BCrypt.Net.BCrypt.Verify(cpfOriginal, contaSalva.Cpf)); // Deve validar com BCrypt
+        }
+
+        [Fact]
+        public async Task Handle_SenhaDeveSerHasheada()
+        {
+            // Arrange
+            var senhaOriginal = "senha123";
+            var command = new CriarContaCommand 
+            { 
+                Cpf = "52998224725", 
+                NomeTitular = "Test Senha", 
+                Senha = senhaOriginal 
+            };
+
+            // Act
+            var numeroConta = await _handler.Handle(command, CancellationToken.None);
+            var contaSalva = await _context.Contas.FirstOrDefaultAsync(c => c.NumeroConta == numeroConta);
+
+            // Assert
+            Assert.NotNull(contaSalva);
+            Assert.NotEqual(senhaOriginal, contaSalva.Senha);
+            Assert.True(BCrypt.Net.BCrypt.Verify(senhaOriginal, contaSalva.Senha));
+        }
+
+        [Fact]
         public async Task Handle_CpfJaExistente_DeveLancarExcecao()
         {
             // Arrange
+            var cpfOriginal = "11122233344";
+            var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
+            
             _context.Contas.Add(new Conta 
             { 
                 Id = Guid.NewGuid(), 
-                Cpf = "11122233344", 
+                Cpf = cpfHash, 
                 NumeroConta = "12345-6", 
                 NomeTitular = "Existente", 
-                Senha = "hash", 
+                Senha = BCrypt.Net.BCrypt.HashPassword("senha"), 
                 Ativa = true 
             });
             await _context.SaveChangesAsync();
 
-            var command = new CriarContaCommand { Cpf = "11122233344", NomeTitular = "Repetido", Senha = "123" };
+            var command = new CriarContaCommand { Cpf = cpfOriginal, NomeTitular = "Repetido", Senha = "123" };
 
             // Act & Assert
             await Assert.ThrowsAsync<BusinessException>(() => 

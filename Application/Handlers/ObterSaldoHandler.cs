@@ -17,25 +17,23 @@ namespace BankMore.ContaCorrente.Application.Handlers {
             var conta = await _context.Contas
                 .FirstOrDefaultAsync(c => c.Id == request.ContaId, cancellationToken);
 
-            if (conta == null || !conta.Ativa)
-                throw new BusinessException("Conta não encontrada ou inativa", "INVALID_ACCOUNT");
+            if (conta == null)
+                throw new BusinessException("Conta não encontrada", "INVALID_ACCOUNT");
+
+            if (!conta.Ativa)
+                throw new BusinessException("Conta inativa", "INACTIVE_ACCOUNT");
 
             var movimentos = await _context.Movimentos
                 .Where(m => m.ContaId == conta.Id)
                 .ToListAsync(cancellationToken);
 
-            // Calcula o saldo
             var saldo = movimentos.Where(m => m.Tipo == "C").Sum(m => m.Valor) -
                         movimentos.Where(m => m.Tipo == "D").Sum(m => m.Valor);
-
-            // Se não houver movimentos, o saldo é 0,00
-            if (saldo == 0) {
-                saldo = 0;
-            }
 
             return new SaldoDto {
                 NumeroConta = conta.NumeroConta,
                 NomeTitular = conta.NomeTitular,
+                DataHoraConsulta = DateTime.UtcNow,
                 Saldo = saldo
             };
         }

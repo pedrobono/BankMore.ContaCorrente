@@ -21,10 +21,19 @@ namespace BankMore.ContaCorrente.Application.Handlers {
 
         public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken) {
             var numeroConta = request.CpfOrNumeroConta.Replace("-", "");
-
-            var conta = await _context.Contas
-                .FirstOrDefaultAsync(c => c.Cpf == request.CpfOrNumeroConta || c.NumeroConta.Replace("-", "") == numeroConta, cancellationToken);
-
+            
+            var todasContas = await _context.Contas.ToListAsync(cancellationToken);
+            
+            Conta conta = null;
+            
+            // Busca por número de conta ou CPF hasheado
+            foreach (var c in todasContas) {
+                if (c.NumeroConta.Replace("-", "") == numeroConta || BCrypt.Net.BCrypt.Verify(request.CpfOrNumeroConta, c.Cpf)) {
+                    conta = c;
+                    break;
+                }
+            }
+            
             if (conta == null || !BCrypt.Net.BCrypt.Verify(request.Senha, conta.Senha)) {
                 throw new UnauthorizedAccessException("Usuário ou senha inválidos.");
             }

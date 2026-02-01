@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using BankMore.ContaCorrente.Application.Commands;
 using BankMore.ContaCorrente.Application.Validators;
 using FluentValidation.Results;
 using System;
+using System.Security.Claims;
 using BankMore.ContaCorrente.Domain.Exceptions;
 
 namespace BankMore.ContaCorrente.Api.Controllers {
@@ -32,6 +34,45 @@ namespace BankMore.ContaCorrente.Api.Controllers {
             }
             catch (BusinessException ex) {
                 return BadRequest(new { message = ex.Message, failureType = ex.FailureType });
+            }
+        }
+
+        [HttpPatch("me/inactivate")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> InativarConta([FromBody] InativarContaCommand comando) {
+            var contaId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(contaId)) {
+                return StatusCode(403, new { message = "Token inválido ou expirado", failureType = "INVALID_TOKEN" });
+            }
+
+            comando.ContaId = Guid.Parse(contaId);
+
+            try {
+                await _mediator.Send(comando);
+                return NoContent();
+            }
+            catch (UnauthorizedAccessException) {
+                return Unauthorized(new { message = "Senha inválida", failureType = "USER_UNAUTHORIZED" });
+            }
+            catch (BusinessException ex) {
+                return BadRequest(new { message = ex.Message, failureType = ex.FailureType });
+            }
+        }
+
+        [HttpPost("resolve")]
+        [Authorize]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ResolverConta([FromBody] ResolverContaCommand comando) {
+            try {
+                var resultado = await _mediator.Send(comando);
+                return Ok(new { contaId = resultado.ContaId, numeroConta = resultado.NumeroConta });
+            }
+            catch (BusinessException ex) {
+                return NotFound(new { message = ex.Message, failureType = ex.FailureType });
             }
         }
     }

@@ -29,14 +29,25 @@ namespace BankMore.ContaCorrente.Application.Handlers {
             if (request.Tipo != "C" && request.Tipo != "D")
                 throw new BusinessException("Tipo de movimento inválido", "INVALID_TYPE");
 
-            if (request.Tipo == "C" && request.NumeroConta != conta.NumeroConta)
-                throw new BusinessException("Tipo de movimento inválido para contas diferentes", "INVALID_TYPE");
+            // Débito só pode ser feito na própria conta (quando ContaIdLogada está presente)
+            if (request.Tipo == "D" && request.ContaIdLogada.HasValue && conta.Id != request.ContaIdLogada.Value)
+                throw new BusinessException("Débito só pode ser realizado na própria conta", "INVALID_TYPE");
 
             var movimentoExistente = await _context.Movimentos
-                .AnyAsync(m => m.RequestId == request.RequestId, cancellationToken);
+                .AnyAsync(m => m.ContaId == conta.Id && m.RequestId == request.RequestId, cancellationToken);
 
             if (movimentoExistente)
                 return;
+
+            // Validar saldo insuficiente para débitos
+            if (request.Tipo == "D") {
+                var saldoAtual = await _context.Movimentos
+                    .Where(m => m.ContaId == conta.Id)
+                    .SumAsync(m => m.Tipo == "C" ? m.Valor : -m.Valor, cancellationToken);
+
+                if (saldoAtual < request.Valor)
+                    throw new BusinessException("Saldo insuficiente", "INSUFFICIENT_BALANCE");
+            }
 
             var movimento = new Movimento {
                 ContaId = conta.Id,

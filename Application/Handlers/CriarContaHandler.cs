@@ -14,14 +14,16 @@ namespace BankMore.ContaCorrente.Application.Handlers {
         }
 
         public async Task<string> Handle(CriarContaCommand request, CancellationToken cancellationToken) {
-            var cpfExistente = await _contexto.Contas
-                .AnyAsync(c => c.Cpf == request.Cpf, cancellationToken);
+            var cpf = new Domain.ValueObjects.Cpf(request.Cpf);
+            var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpf.Valor);
+
+            // Busca todas as contas e verifica CPF em memória (CPF está hasheado)
+            var todasContas = await _contexto.Contas.ToListAsync(cancellationToken);
+            var cpfExistente = todasContas.Any(c => BCrypt.Net.BCrypt.Verify(cpf.Valor, c.Cpf));
 
             if (cpfExistente) {
                 throw new BusinessException("O CPF informado já está cadastrado.", "DUPLICATE_CPF");
             }
-
-            var cpf = new Domain.ValueObjects.Cpf(request.Cpf);
 
             string numeroGerado;
             bool numeroJaExiste;
@@ -37,7 +39,7 @@ namespace BankMore.ContaCorrente.Application.Handlers {
                 NomeTitular = request.NomeTitular,
                 Senha = BCrypt.Net.BCrypt.HashPassword(request.Senha),
                 Ativa = true,
-                Cpf = cpf.Valor
+                Cpf = cpfHash
             };
 
             _contexto.Contas.Add(conta);

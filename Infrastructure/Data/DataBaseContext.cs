@@ -35,7 +35,7 @@ namespace BankMore.ContaCorrente.Infrastructure.Data {
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Movimento>()
-                .HasIndex(m => m.RequestId)
+                .HasIndex(m => new { m.ContaId, m.RequestId })
                 .IsUnique(); 
 
             modelBuilder.Entity<Transferencia>()

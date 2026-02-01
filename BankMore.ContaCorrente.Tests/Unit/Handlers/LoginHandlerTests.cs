@@ -35,10 +35,13 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
         public async Task Handle_ValidCredentials_ReturnsToken()
         {
             // Arrange
+            var cpfOriginal = "12345678901";
+            var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
+            
             _context.Contas.Add(new Conta
             {
                 Id = Guid.NewGuid(),
-                Cpf = "12345678901",
+                Cpf = cpfHash,
                 NumeroConta = "12345-6",
                 NomeTitular = "Test User",
                 Senha = BCrypt.Net.BCrypt.HashPassword("password123"),
@@ -46,7 +49,36 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             });
             await _context.SaveChangesAsync();
 
-            var command = new LoginCommand { CpfOrNumeroConta = "12345678901", Senha = "password123" };
+            var command = new LoginCommand { CpfOrNumeroConta = cpfOriginal, Senha = "password123" };
+
+            // Act
+            var result = await _handler.Handle(command, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.False(string.IsNullOrWhiteSpace(result.Token));
+        }
+
+        [Fact]
+        public async Task Handle_LoginPorNumeroConta_ReturnsToken()
+        {
+            // Arrange
+            var cpfOriginal = "98765432109";
+            var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
+            var numeroConta = "54321-9";
+            
+            _context.Contas.Add(new Conta
+            {
+                Id = Guid.NewGuid(),
+                Cpf = cpfHash,
+                NumeroConta = numeroConta,
+                NomeTitular = "Test User 2",
+                Senha = BCrypt.Net.BCrypt.HashPassword("password123"),
+                Ativa = true
+            });
+            await _context.SaveChangesAsync();
+
+            var command = new LoginCommand { CpfOrNumeroConta = numeroConta, Senha = "password123" };
 
             // Act
             var result = await _handler.Handle(command, CancellationToken.None);
@@ -60,10 +92,13 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
         public async Task Handle_InvalidCredentials_ThrowsUnauthorizedException()
         {
             // Arrange
+            var cpfOriginal = "12345678901";
+            var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
+            
             _context.Contas.Add(new Conta
             {
                 Id = Guid.NewGuid(),
-                Cpf = "12345678901",
+                Cpf = cpfHash,
                 NumeroConta = "12345-6",
                 NomeTitular = "Test User",
                 Senha = BCrypt.Net.BCrypt.HashPassword("password123"),
@@ -71,7 +106,7 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             });
             await _context.SaveChangesAsync();
 
-            var command = new LoginCommand { CpfOrNumeroConta = "12345678901", Senha = "wrongpassword" };
+            var command = new LoginCommand { CpfOrNumeroConta = cpfOriginal, Senha = "wrongpassword" };
 
             // Act & Assert
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>

@@ -1,7 +1,10 @@
 using BankMore.ContaCorrente.Application.Commands;
+using BankMore.ContaCorrente.Application.Validators;
+using BankMore.ContaCorrente.Domain.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BankMore.ContaCorrente.Api.Controllers;
 
@@ -17,29 +20,38 @@ public class MovimentoController : ControllerBase {
     [HttpPost]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> RegistrarMovimento([FromBody] RegistrarMovimentoCommand comando) {
-        if (comando == null) {
-            return BadRequest(new {
-                message = "Os dados do movimento são inválidos.",
-                failureType = "INVALID_DATA"
-            });
+        var contaIdLogada = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        var numeroContaLogada = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+
+        if (string.IsNullOrEmpty(contaIdLogada)) {
+            return StatusCode(403, new { message = "Token inválido ou expirado", failureType = "INVALID_TOKEN" });
+        }
+
+        if (string.IsNullOrEmpty(comando.NumeroConta)) {
+            if (string.IsNullOrEmpty(numeroContaLogada)) {
+                return BadRequest(new { message = "Número da conta não encontrado", failureType = "INVALID_DATA" });
+            }
+            comando.NumeroConta = numeroContaLogada;
+        }
+
+        comando.ContaIdLogada = Guid.Parse(contaIdLogada);
+
+        var validador = new RegistrarMovimentoValidator();
+        var resultado = await validador.ValidateAsync(comando);
+
+        if (!resultado.IsValid) {
+            var erros = string.Join(", ", resultado.Errors.Select(e => e.ErrorMessage));
+            return BadRequest(new { message = erros, failureType = "INVALID_DATA" });
         }
 
         try {
             await _mediator.Send(comando);
             return NoContent();
         }
-        catch (ArgumentException ex) {
-            return BadRequest(new {
-                message = ex.Message,
-                failureType = "INVALID_ACCOUNT"
-            });
-        }
-        catch (Exception ex) {
-            return StatusCode(500, new {
-                message = "Erro interno ao processar movimento.",
-                details = ex.Message
-            });
+        catch (BusinessException ex) {
+            return BadRequest(new { message = ex.Message, failureType = ex.FailureType });
         }
     }
 }
