@@ -45,11 +45,10 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
 
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // Creditar 100
+            // Creditar 100 (sem especificar contaId, usa do token)
             await _client.PostAsJsonAsync("/api/Movimento", new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
                 Tipo = "C",
                 Valor = 100
             });
@@ -58,7 +57,6 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
             var debitoResponse = await _client.PostAsJsonAsync("/api/Movimento", new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
                 Tipo = "D",
                 Valor = 150
             });
@@ -95,11 +93,10 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
 
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            // Creditar 100
+            // Creditar 100 (sem especificar contaId, usa do token)
             await _client.PostAsJsonAsync("/api/Movimento", new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
                 Tipo = "C",
                 Valor = 100
             });
@@ -108,7 +105,6 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
             var debitoResponse = await _client.PostAsJsonAsync("/api/Movimento", new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
                 Tipo = "D",
                 Valor = 50
             });

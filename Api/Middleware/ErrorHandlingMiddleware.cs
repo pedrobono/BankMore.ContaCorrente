@@ -18,9 +18,19 @@ namespace BankMore.ContaCorrente.Api.Middleware {
             try {
                 await _next(httpContext);
             }
+            catch (BusinessException ex) {
+                _logger.LogWarning(ex, "[BusinessException] {FailureType}: {Message} | Path: {Path}", 
+                    ex.FailureType, ex.Message, httpContext.Request.Path);
+                await HandleExceptionAsync(httpContext, ex);
+            }
+            catch (UnauthorizedAccessException ex) {
+                _logger.LogWarning(ex, "[UnauthorizedAccess]: {Message} | Path: {Path}", 
+                    ex.Message, httpContext.Request.Path);
+                await HandleExceptionAsync(httpContext, ex);
+            }
             catch (Exception ex) {
-                _logger.LogError(ex, "Erro inesperado ocorrido durante o processamento da requisição.");
-
+                _logger.LogError(ex, "[ERRO INTERNO] {Message} | Path: {Path} | StackTrace: {StackTrace}", 
+                    ex.Message, httpContext.Request.Path, ex.StackTrace);
                 await HandleExceptionAsync(httpContext, ex);
             }
         }
@@ -28,15 +38,22 @@ namespace BankMore.ContaCorrente.Api.Middleware {
         private Task HandleExceptionAsync(HttpContext context, Exception exception) {
             var statusCode = exception switch {
                 BusinessException => StatusCodes.Status400BadRequest,
+                UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
                 _ => StatusCodes.Status500InternalServerError
             };
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = statusCode;
 
+            var failureType = exception switch {
+                BusinessException be => be.FailureType,
+                UnauthorizedAccessException => "USER_UNAUTHORIZED",
+                _ => "INTERNAL_ERROR"
+            };
+
             var response = new {
                 message = exception.Message,
-                failureType = exception is BusinessException ? ((BusinessException)exception).FailureType : "INTERNAL_ERROR"
+                failureType = failureType
             };
 
             return context.Response.WriteAsJsonAsync(response);

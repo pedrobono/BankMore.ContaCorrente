@@ -86,10 +86,10 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
 
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+            // Movimentos sem ContaId usam a conta do token
             await client.PostAsJsonAsync("/api/Movimento", new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
                 Valor = 100m,
                 Tipo = "C"
             });
@@ -97,7 +97,6 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
             await client.PostAsJsonAsync("/api/Movimento", new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
                 Valor = 50m,
                 Tipo = "C"
             });
@@ -105,7 +104,6 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
             await client.PostAsJsonAsync("/api/Movimento", new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
                 Valor = 30m,
                 Tipo = "D"
             });

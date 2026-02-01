@@ -22,7 +22,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Validators
             var command = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = "12345-6",
+                ContaId = Guid.NewGuid(),
                 Valor = 100m,
                 Tipo = "C"
             };
@@ -41,7 +41,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Validators
             var command = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = "12345-6",
+                ContaId = Guid.NewGuid(),
                 Valor = -100m,
                 Tipo = "C"
             };
@@ -60,7 +60,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Validators
             var command = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = "12345-6",
+                ContaId = Guid.NewGuid(),
                 Valor = 100m,
                 Tipo = "X"
             };

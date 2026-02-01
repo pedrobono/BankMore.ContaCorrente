@@ -66,23 +66,21 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
 
             var requestIdCompartilhado = Guid.NewGuid().ToString();
 
-            // Act - Movimento na conta 1
+            // Act - Movimento na conta 1 (sem especificar contaId, usa do token)
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token1);
             var movimento1 = new RegistrarMovimentoCommand
             {
                 RequestId = requestIdCompartilhado,
-                NumeroConta = numeroConta1,
                 Tipo = "C",
                 Valor = 100
             };
             var response1 = await _client.PostAsJsonAsync("/api/Movimento", movimento1);
 
-            // Act - Movimento na conta 2 com mesmo RequestId
+            // Act - Movimento na conta 2 com mesmo RequestId (usa conta do token2)
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token2);
             var movimento2 = new RegistrarMovimentoCommand
             {
                 RequestId = requestIdCompartilhado,
-                NumeroConta = numeroConta2,
                 Tipo = "C",
                 Valor = 200
             };
@@ -122,7 +120,6 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
             var movimento = new RegistrarMovimentoCommand
             {
                 RequestId = requestId,
-                NumeroConta = numeroConta,
                 Tipo = "C",
                 Valor = 100
             };

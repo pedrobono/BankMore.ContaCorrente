@@ -23,17 +23,9 @@ public class MovimentoController : ControllerBase {
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> RegistrarMovimento([FromBody] RegistrarMovimentoCommand comando) {
         var contaIdLogada = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-        var numeroContaLogada = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
 
         if (string.IsNullOrEmpty(contaIdLogada)) {
             return StatusCode(403, new { message = "Token inválido ou expirado", failureType = "INVALID_TOKEN" });
-        }
-
-        if (string.IsNullOrEmpty(comando.NumeroConta)) {
-            if (string.IsNullOrEmpty(numeroContaLogada)) {
-                return BadRequest(new { message = "Número da conta não encontrado", failureType = "INVALID_DATA" });
-            }
-            comando.NumeroConta = numeroContaLogada;
         }
 
         comando.ContaIdLogada = Guid.Parse(contaIdLogada);

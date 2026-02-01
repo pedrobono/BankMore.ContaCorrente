@@ -53,15 +53,24 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
             Assert.NotNull(loginResult.Token);
             var token = loginResult.Token;
 
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            
+            // Resolver conta para obter o ID
+            var resolverResponse = await client.PostAsJsonAsync("/api/Conta/resolve", new { numeroConta });
+            Assert.True(resolverResponse.IsSuccessStatusCode, $"Falha ao resolver conta: {await resolverResponse.Content.ReadAsStringAsync()}");
+            
+            var resolverResult = await resolverResponse.Content.ReadFromJsonAsync<ResolverContaResponse>();
+            Assert.NotNull(resolverResult);
+            var contaId = resolverResult.ContaId;
+
             var movimentoCommand = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
+                ContaId = contaId,
                 Valor = 100m,
                 Tipo = "C"
             };
 
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var response = await client.PostAsJsonAsync("/api/Movimento", movimentoCommand);
 
             Assert.True(response.IsSuccessStatusCode, $"Falha ao registrar movimento: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
@@ -104,15 +113,16 @@ namespace BankMore.ContaCorrente.Tests.Integration.Controllers
             Assert.NotNull(loginResult.Token);
             var token = loginResult.Token;
 
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            // Movimento sem ContaId usa a conta do token
             var movimentoCommand = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = numeroConta,
                 Valor = 50m,
                 Tipo = "C"
             };
 
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var response = await client.PostAsJsonAsync("/api/Movimento", movimentoCommand);
 
             Assert.True(response.IsSuccessStatusCode, $"Falha ao registrar movimento: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
