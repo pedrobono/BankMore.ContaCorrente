@@ -44,7 +44,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             var command = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = "12345-4",
+                NumeroConta = "12345-5",
                 Valor = 100m,
                 Tipo = "C"
             };
@@ -93,7 +93,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             var command = new RegistrarMovimentoCommand
             {
                 RequestId = requestId,
-                NumeroConta = "12345-4",
+                NumeroConta = "12345-5",
                 Valor = 100m,
                 Tipo = "C"
             };
@@ -103,8 +103,8 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             await _handler.Handle(command, CancellationToken.None);
 
             // Assert
-            var movimentos = await _context.Movimento.Where(m => m.IdMovimento == Guid.Parse(requestId)).ToListAsync();
-            Assert.Single(movimentos);
+            var idempotencias = await _context.Idempotencia.Where(i => i.ChaveIdempotencia == Guid.Parse(requestId)).ToListAsync();
+            Assert.Single(idempotencias);
         }
 
         [Fact]
@@ -125,7 +125,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             var command = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = "12345-4",
+                NumeroConta = "12345-5",
                 Valor = 100m,
                 Tipo = "C"
             };
@@ -153,7 +153,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             var command = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = "12345-4",
+                NumeroConta = "12345-5",
                 Valor = -100m,
                 Tipo = "C"
             };
@@ -182,7 +182,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
             var command = new RegistrarMovimentoCommand
             {
                 RequestId = Guid.NewGuid().ToString(),
-                NumeroConta = "12345-4",
+                NumeroConta = "12345-5",
                 Valor = 100m,
                 Tipo = "X"
             };

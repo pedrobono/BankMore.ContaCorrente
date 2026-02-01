@@ -65,7 +65,7 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             // Arrange
             var cpfOriginal = "98765432109";
             var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
-            var numeroConta = "54321-9";
+            var numeroConta = "54321-1";
             
             _context.ContaCorrente.Add(new Conta
             {

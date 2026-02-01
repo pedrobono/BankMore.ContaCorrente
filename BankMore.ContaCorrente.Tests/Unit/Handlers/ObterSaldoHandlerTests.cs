@@ -48,7 +48,7 @@ namespace BankMore.ContaCorrente.Tests.Unit.Handlers
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("12345-4", result.NumeroConta);
+            Assert.Equal("12345-5", result.NumeroConta);
             Assert.Equal("Test User", result.NomeTitular);
             Assert.True(result.DataHoraConsulta <= DateTime.UtcNow);
             Assert.Equal(0, result.Saldo);
