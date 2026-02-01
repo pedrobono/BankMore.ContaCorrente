@@ -17,9 +17,9 @@ public class SwaggerRequestExampleFilter : IOperationFilter {
 
         if (context.MethodInfo.Name == "RegistrarMovimento") {
             operation.RequestBody.Content["application/json"].Example = new OpenApiObject {
-                ["accountNumber"] = new OpenApiString("12345-6"),
-                ["value"] = new OpenApiDouble(150.50),
-                ["type"] = new OpenApiString("C"), // C para Crédito, D para Débito
+                ["numeroConta"] = new OpenApiString("12345-6"),
+                ["valor"] = new OpenApiDouble(150.50),
+                ["tipo"] = new OpenApiString("C"), // C para Crédito, D para Débito
                 ["requestId"] = new OpenApiString(Guid.NewGuid().ToString())
             };
         }

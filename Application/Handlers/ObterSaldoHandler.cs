@@ -14,25 +14,25 @@ namespace BankMore.ContaCorrente.Application.Handlers {
         }
 
         public async Task<SaldoDto> Handle(ObterSaldoQuery request, CancellationToken cancellationToken) {
-            var conta = await _context.Contas
-                .FirstOrDefaultAsync(c => c.Id == request.ContaId, cancellationToken);
+            var conta = await _context.ContaCorrente
+                .FirstOrDefaultAsync(c => c.IdContaCorrente == request.ContaId, cancellationToken);
 
             if (conta == null)
                 throw new BusinessException("Conta não encontrada", "INVALID_ACCOUNT");
 
-            if (!conta.Ativa)
+            if (conta.Ativo == 0)
                 throw new BusinessException("Conta inativa", "INACTIVE_ACCOUNT");
 
-            var movimentos = await _context.Movimentos
-                .Where(m => m.ContaId == conta.Id)
+            var movimentos = await _context.Movimento
+                .Where(m => m.IdContaCorrente == conta.IdContaCorrente)
                 .ToListAsync(cancellationToken);
 
-            var saldo = movimentos.Where(m => m.Tipo == "C").Sum(m => m.Valor) -
-                        movimentos.Where(m => m.Tipo == "D").Sum(m => m.Valor);
+            var saldo = movimentos.Where(m => m.TipoMovimento == "C").Sum(m => m.Valor) -
+                        movimentos.Where(m => m.TipoMovimento == "D").Sum(m => m.Valor);
 
             return new SaldoDto {
-                NumeroConta = conta.NumeroConta,
-                NomeTitular = conta.NomeTitular,
+                NumeroConta = $"{conta.Numero}-{conta.Numero % 10}",
+                NomeTitular = conta.Nome,
                 DataHoraConsulta = DateTime.UtcNow,
                 Saldo = saldo
             };

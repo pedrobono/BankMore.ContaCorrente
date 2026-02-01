@@ -16,12 +16,12 @@ public class MovimentoRepository : IMovimentoRepository
 
     public async Task Adicionar(Movimento movimento)
     {
-        await _context.Movimentos.AddAsync(movimento);
+        await _context.Movimento.AddAsync(movimento);
         await _context.SaveChangesAsync();
     }
 
     public async Task<bool> ExisteRequestId(string requestId)
     {
-        return await _context.Movimentos.AnyAsync(m => m.RequestId == requestId);
+        return await _context.Idempotencia.AnyAsync(i => i.ChaveIdempotencia == Guid.Parse(requestId));
     }
 }

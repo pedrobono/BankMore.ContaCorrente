@@ -13,8 +13,8 @@ namespace BankMore.ContaCorrente.Application.Handlers {
         }
 
         public async Task Handle(InativarContaCommand request, CancellationToken cancellationToken) {
-            var conta = await _context.Contas
-                .FirstOrDefaultAsync(c => c.Id == request.ContaId, cancellationToken);
+            var conta = await _context.ContaCorrente
+                .FirstOrDefaultAsync(c => c.IdContaCorrente == request.ContaId, cancellationToken);
 
             if (conta == null)
                 throw new BusinessException("Conta não encontrada", "INVALID_ACCOUNT");
@@ -22,7 +22,7 @@ namespace BankMore.ContaCorrente.Application.Handlers {
             if (!BCrypt.Net.BCrypt.Verify(request.Senha, conta.Senha))
                 throw new UnauthorizedAccessException("Senha inválida");
 
-            conta.Ativa = false;
+            conta.Ativo = 0;
             await _context.SaveChangesAsync(cancellationToken);
         }
     }

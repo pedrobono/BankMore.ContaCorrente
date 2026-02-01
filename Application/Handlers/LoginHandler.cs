@@ -20,15 +20,18 @@ namespace BankMore.ContaCorrente.Application.Handlers {
         }
 
         public async Task<LoginResponse> Handle(LoginCommand request, CancellationToken cancellationToken) {
-            var numeroConta = request.CpfOrNumeroConta.Replace("-", "");
-            
-            var todasContas = await _context.Contas.ToListAsync(cancellationToken);
-            
+            var jwtSecretKey = _configuration["JwtSettings:SecretKey"] ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+            if (string.IsNullOrEmpty(jwtSecretKey)) {
+                throw new InvalidOperationException("A chave secreta do JWT não foi fornecida.");
+            }
+
+            var todasContas = await _context.ContaCorrente.ToListAsync(cancellationToken);
             Conta conta = null;
             
-            // Busca por número de conta ou CPF hasheado
-            foreach (var c in todasContas) {
-                if (c.NumeroConta.Replace("-", "") == numeroConta || BCrypt.Net.BCrypt.Verify(request.CpfOrNumeroConta, c.Cpf)) {
+            foreach (var c in todasContas.OrderByDescending(x => x.Ativo)) {
+                var numeroFormatado = $"{c.Numero}-{c.Numero % 10}";
+                
+                if (BCrypt.Net.BCrypt.Verify(request.CpfOrNumeroConta, c.Salt) || numeroFormatado == request.CpfOrNumeroConta) {
                     conta = c;
                     break;
                 }
@@ -37,20 +40,18 @@ namespace BankMore.ContaCorrente.Application.Handlers {
             if (conta == null || !BCrypt.Net.BCrypt.Verify(request.Senha, conta.Senha)) {
                 throw new UnauthorizedAccessException("Usuário ou senha inválidos.");
             }
-
-            var jwtSecretKey = _configuration["JwtSettings:SecretKey"] ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
-
-            if (string.IsNullOrEmpty(jwtSecretKey)) {
-                throw new InvalidOperationException("A chave secreta do JWT não foi fornecida.");
+            
+            if (conta.Ativo == 0) {
+                throw new UnauthorizedAccessException("Conta inativa.");
             }
-            // Gerar o token JWT
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, conta.Id.ToString()),
-                new Claim(ClaimTypes.Name, conta.NumeroConta),
+                new Claim(ClaimTypes.NameIdentifier, conta.IdContaCorrente.ToString()),
+                new Claim(ClaimTypes.Name, $"{conta.Numero}-{conta.Numero % 10}"),
             };
 
             var token = new JwtSecurityToken(

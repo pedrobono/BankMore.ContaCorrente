@@ -43,9 +43,10 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             Assert.False(string.IsNullOrWhiteSpace(result));
             Assert.Contains("-", result);
             
-            var contaSalva = await _context.Contas.FirstOrDefaultAsync(c => c.NumeroConta == result);
+            var todasContas = await _context.ContaCorrente.ToListAsync();
+            var contaSalva = todasContas.FirstOrDefault(c => $"{c.Numero}-{c.Numero % 10}" == result);
             Assert.NotNull(contaSalva);
-            Assert.Equal("Pedro Bono", contaSalva.NomeTitular);
+            Assert.Equal("Pedro Bono", contaSalva.Nome);
         }
 
         [Fact]
@@ -62,12 +63,13 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
 
             // Act
             var numeroConta = await _handler.Handle(command, CancellationToken.None);
-            var contaSalva = await _context.Contas.FirstOrDefaultAsync(c => c.NumeroConta == numeroConta);
+            var todasContas = await _context.ContaCorrente.ToListAsync();
+            var contaSalva = todasContas.FirstOrDefault(c => $"{c.Numero}-{c.Numero % 10}" == numeroConta);
 
             // Assert
             Assert.NotNull(contaSalva);
-            Assert.NotEqual(cpfOriginal, contaSalva.Cpf); // CPF não deve estar em texto plano
-            Assert.True(BCrypt.Net.BCrypt.Verify(cpfOriginal, contaSalva.Cpf)); // Deve validar com BCrypt
+            Assert.NotEqual(cpfOriginal, contaSalva.Salt); // CPF não deve estar em texto plano
+            Assert.True(BCrypt.Net.BCrypt.Verify(cpfOriginal, contaSalva.Salt)); // Deve validar com BCrypt
         }
 
         [Fact]
@@ -84,7 +86,8 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
 
             // Act
             var numeroConta = await _handler.Handle(command, CancellationToken.None);
-            var contaSalva = await _context.Contas.FirstOrDefaultAsync(c => c.NumeroConta == numeroConta);
+            var todasContas = await _context.ContaCorrente.ToListAsync();
+            var contaSalva = todasContas.FirstOrDefault(c => $"{c.Numero}-{c.Numero % 10}" == numeroConta);
 
             // Assert
             Assert.NotNull(contaSalva);
@@ -99,14 +102,14 @@ namespace BankMore.ContaCorrente.Tests.UnitTests
             var cpfOriginal = "11122233344";
             var cpfHash = BCrypt.Net.BCrypt.HashPassword(cpfOriginal);
             
-            _context.Contas.Add(new Conta 
+            _context.ContaCorrente.Add(new Conta 
             { 
-                Id = Guid.NewGuid(), 
-                Cpf = cpfHash, 
-                NumeroConta = "12345-6", 
-                NomeTitular = "Existente", 
+                IdContaCorrente = Guid.NewGuid(), 
+                Salt = cpfHash, 
+                Numero = 12345, 
+                Nome = "Existente", 
                 Senha = BCrypt.Net.BCrypt.HashPassword("senha"), 
-                Ativa = true 
+                Ativo = 1 
             });
             await _context.SaveChangesAsync();
 

@@ -14,13 +14,24 @@ namespace BankMore.ContaCorrente.Application.Handlers {
         }
 
         public async Task Handle(RegistrarMovimentoCommand request, CancellationToken cancellationToken) {
-            var conta = await _context.Contas
-                .FirstOrDefaultAsync(c => c.NumeroConta == request.NumeroConta, cancellationToken);
+            Conta conta;
+            
+            if (string.IsNullOrEmpty(request.NumeroConta)) {
+                if (!request.ContaIdLogada.HasValue)
+                    throw new BusinessException("Conta não identificada", "INVALID_ACCOUNT");
+                    
+                conta = await _context.ContaCorrente
+                    .FirstOrDefaultAsync(c => c.IdContaCorrente == request.ContaIdLogada.Value, cancellationToken);
+            } else {
+                var numeroFormatado = request.NumeroConta.Replace("-", "");
+                var todasContas = await _context.ContaCorrente.ToListAsync(cancellationToken);
+                conta = todasContas.FirstOrDefault(c => $"{c.Numero}{c.Numero % 10}" == numeroFormatado);
+            }
 
             if (conta == null)
                 throw new BusinessException("Conta não encontrada", "INVALID_ACCOUNT");
 
-            if (!conta.Ativa)
+            if (conta.Ativo == 0)
                 throw new BusinessException("Esta conta está encerrada ou inativa", "INACTIVE_ACCOUNT");
 
             if (request.Valor <= 0)
@@ -29,35 +40,42 @@ namespace BankMore.ContaCorrente.Application.Handlers {
             if (request.Tipo != "C" && request.Tipo != "D")
                 throw new BusinessException("Tipo de movimento inválido", "INVALID_TYPE");
 
-            // Débito só pode ser feito na própria conta (quando ContaIdLogada está presente)
-            if (request.Tipo == "D" && request.ContaIdLogada.HasValue && conta.Id != request.ContaIdLogada.Value)
+            if (request.Tipo == "D" && request.ContaIdLogada.HasValue && conta.IdContaCorrente != request.ContaIdLogada.Value)
                 throw new BusinessException("Débito só pode ser realizado na própria conta", "INVALID_TYPE");
 
-            var movimentoExistente = await _context.Movimentos
-                .AnyAsync(m => m.ContaId == conta.Id && m.RequestId == request.RequestId, cancellationToken);
+            var movimentoExistente = await _context.Idempotencia
+                .AnyAsync(i => i.ChaveIdempotencia == Guid.Parse(request.RequestId), cancellationToken);
 
             if (movimentoExistente)
                 return;
 
-            // Validar saldo insuficiente para débitos
             if (request.Tipo == "D") {
-                var saldoAtual = await _context.Movimentos
-                    .Where(m => m.ContaId == conta.Id)
-                    .SumAsync(m => m.Tipo == "C" ? m.Valor : -m.Valor, cancellationToken);
+                var movimentos = await _context.Movimento
+                    .Where(m => m.IdContaCorrente == conta.IdContaCorrente)
+                    .ToListAsync(cancellationToken);
+                    
+                var saldoAtual = movimentos.Sum(m => m.TipoMovimento == "C" ? m.Valor : -m.Valor);
 
                 if (saldoAtual < request.Valor)
                     throw new BusinessException("Saldo insuficiente", "INSUFFICIENT_BALANCE");
             }
 
             var movimento = new Movimento {
-                ContaId = conta.Id,
-                Tipo = request.Tipo,
+                IdMovimento = Guid.NewGuid(),
+                IdContaCorrente = conta.IdContaCorrente,
+                TipoMovimento = request.Tipo,
                 Valor = request.Valor,
-                DataHora = DateTime.UtcNow,
-                RequestId = request.RequestId
+                DataMovimento = DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss")
             };
 
-            _context.Movimentos.Add(movimento);
+            var idempotencia = new Idempotencia {
+                ChaveIdempotencia = Guid.Parse(request.RequestId),
+                Requisicao = $"{{\"tipo\":\"{request.Tipo}\",\"valor\":{request.Valor}}}",
+                Resultado = "SUCCESS"
+            };
+
+            _context.Movimento.Add(movimento);
+            _context.Idempotencia.Add(idempotencia);
             await _context.SaveChangesAsync(cancellationToken);
         }
     }

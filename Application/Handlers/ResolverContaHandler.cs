@@ -18,8 +18,8 @@ namespace BankMore.ContaCorrente.Application.Handlers {
                 throw new BusinessException("Conta não encontrada", "INVALID_ACCOUNT");
 
             return new ResolverContaResponse {
-                ContaId = conta.Id,
-                NumeroConta = conta.NumeroConta
+                ContaId = conta.IdContaCorrente,
+                NumeroConta = $"{conta.Numero}-{conta.Numero % 10}"
             };
         }
     }
