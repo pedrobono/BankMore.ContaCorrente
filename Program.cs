@@ -17,9 +17,12 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. ADICIONE ESTA LINHA: Registra os serviços necessários para Controllers
 builder.Services.AddControllers();
 
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<DataBaseContext>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BankMore.ContaCorrente", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BankMore Conta Corrente API", Version = "v1" });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
         Description = "JWT Authorization header usando o esquema Bearer. Exemplo: 'Bearer 12345abcdef'",
@@ -90,7 +93,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Mapeia os controllers para as rotas definidas nos atributos [Route]
+app.MapHealthChecks("/health");
+
 app.MapControllers();
 
 app.Run();

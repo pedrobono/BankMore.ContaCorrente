@@ -57,7 +57,7 @@ A API **BankMore.ContaCorrente** é um serviço de gerenciamento bancário de al
    dotnet run
    ```
 
-Acesse: `http://localhost:5188/swagger`
+Acesse: `http://localhost:8081/swagger`
 
 ### Execução com Docker
 
@@ -79,6 +79,23 @@ Acesse: `http://localhost:5188/swagger`
 Acesse: `http://localhost:8081/swagger`
 
 ## 📍 Endpoints da API
+
+### 🏥 Health Check (`/health`)
+
+#### GET `/health`
+Verifica o status da aplicação e da conexão com o banco de dados.
+
+**Response (200):**
+```
+Healthy
+```
+
+**Response (503):**
+```
+Unhealthy
+```
+
+---
 
 ### 🔐 Autenticação (`/api/Auth`)
 
